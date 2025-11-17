@@ -1,6 +1,6 @@
 {
   "name": "tuf-browser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A minimal TUF client for both node and the browser.",
   "main": "dist/cli.js",
   "type": "module",
