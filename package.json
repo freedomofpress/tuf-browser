@@ -7,6 +7,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "test:playwright": "vitest --config vite.config.playwright.ts",
+    "test:default": "vitest --config vite.config.ts",
     "coverage": "vitest run --coverage",
     "lint": "npx eslint . --fix && npx prettier --write ."
   },
@@ -22,9 +24,12 @@
     "@types/firefox": "^0.0.34",
     "@types/firefox-webext-browser": "^120.0.4",
     "@types/node": "^24.0.14",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4",
+    "@vitest/browser": "^3.2.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "typescript-eslint": "^8.37.0"
+    "playwright": "^1.49.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.37.0",
+    "vite": "^6.0.7",
+    "vitest": "^3.2.4"
   }
 }
