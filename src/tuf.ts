@@ -643,10 +643,19 @@ export class TUFClient {
       );
     }
     const raw_file = await response.arrayBuffer();
+
+    // Verify target file length
+    const expectedLength = cachedTargets.signed.targets[name].length;
+    if (raw_file.byteLength !== expectedLength) {
+      throw new Error(
+        `${name} length mismatch: expected ${expectedLength}, got ${raw_file.byteLength}`,
+      );
+    }
+
+    // Verify target file hash
     const hash_calculated = Uint8ArrayToHex(
       await crypto.subtle.digest(cryptoAlgo, raw_file),
     );
-
     if (!bufferEqual(hashValue, hash_calculated)) {
       throw new Error(
         `${name} ${cryptoAlgo} hash does not match the value in the targets role.`,
