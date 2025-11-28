@@ -399,10 +399,16 @@ export class TUFClient {
       newSnapshotRaw = await this.fetchMetafileBinary(Roles.Snapshot, -1);
     }
 
-    // Spec 5.5.2: Verify snapshot hash if present in timestamp
-    const snapshotHash =
-      timestampMeta.signed.meta["snapshot.json"].hashes?.sha256;
-    if (snapshotHash) {
+    // Spec 5.5.2: Verify snapshot length and hash if present in timestamp
+    const snapshotMeta = timestampMeta.signed.meta["snapshot.json"];
+    if (snapshotMeta.length !== undefined) {
+      if (newSnapshotRaw.length !== snapshotMeta.length) {
+        throw new Error(
+          `Snapshot length mismatch: expected ${snapshotMeta.length}, got ${newSnapshotRaw.length}`,
+        );
+      }
+    }
+    if (snapshotMeta.hashes?.sha256) {
       const computedHash = Uint8ArrayToHex(
         new Uint8Array(
           await crypto.subtle.digest(
@@ -411,7 +417,7 @@ export class TUFClient {
           ),
         ),
       );
-      if (!bufferEqual(snapshotHash, computedHash)) {
+      if (!bufferEqual(snapshotMeta.hashes.sha256, computedHash)) {
         throw new Error("Snapshot hash does not match timestamp hash");
       }
     }
@@ -507,22 +513,26 @@ export class TUFClient {
       newTargetsRaw = await this.fetchMetafileBinary(Roles.Targets, -1);
     }
 
-    // Spec 5.6.2 verify hashes only if there is any specified
-    // TODO: ideally we should check for both sha256 and 512, but everything is hardcoded 256 for now
-
-    if (snapshot[`${Roles.Targets}.json`].hashes?.sha256) {
-      const newTargetsRaw_sha256 = Uint8ArrayToHex(
+    // Spec 5.6.2: Verify targets length and hash if present in snapshot
+    const targetsMeta = snapshot[`${Roles.Targets}.json`];
+    if (targetsMeta.length !== undefined) {
+      if (newTargetsRaw.length !== targetsMeta.length) {
+        throw new Error(
+          `Targets length mismatch: expected ${targetsMeta.length}, got ${newTargetsRaw.length}`,
+        );
+      }
+    }
+    // TODO: ideally we should check for both sha256 and sha512, but everything is hardcoded sha256 for now
+    if (targetsMeta.hashes?.sha256) {
+      const computedHash = Uint8ArrayToHex(
         await crypto.subtle.digest(
           HashAlgorithms.SHA256,
           new Uint8Array(newTargetsRaw),
         ),
       );
-
-      const expectedHash = snapshot[`${Roles.Targets}.json`].hashes?.sha256;
-      if (!expectedHash || !bufferEqual(expectedHash, newTargetsRaw_sha256)) {
+      if (!bufferEqual(targetsMeta.hashes.sha256, computedHash)) {
         throw new Error("Targets hash does not match snapshot hash.");
       }
-      // console.log("[TUF]", "Hash verified");
     }
 
     const newTargets = JSON.parse(Uint8ArrayToString(newTargetsRaw));
