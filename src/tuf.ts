@@ -8,7 +8,14 @@ import { FileBackend } from "./storage.js";
 import { ExtensionStorageBackend } from "./storage/browser.js";
 import { FSBackend } from "./storage/filesystem.js";
 import { LocalStorageBackend } from "./storage/localstorage.js";
-import { HashAlgorithms, Meta, Metafile, Roles, Root } from "./types.js";
+import {
+  HashAlgorithms,
+  Meta,
+  Metafile,
+  Roles,
+  Root,
+  TOP_LEVEL_ROLE_NAMES,
+} from "./types.js";
 import { Uint8ArrayToHex, Uint8ArrayToString } from "./utils/encoding.js";
 
 export class TUFClient {
@@ -216,6 +223,21 @@ export class TUFClient {
 
     if (!Number.isSafeInteger(json.signed.version) || json.signed.version < 1) {
       throw new Error("There is something wrong with the root version number.");
+    }
+
+    // Validate required top-level roles exist
+    for (const role of TOP_LEVEL_ROLE_NAMES) {
+      if (!json.signed.roles[role]) {
+        throw new Error(`Missing required top-level role: ${role}`);
+      }
+    }
+
+    // Validate no duplicate keyids within each role
+    for (const [roleName, role] of Object.entries(json.signed.roles)) {
+      const keyidSet = new Set(role.keyids);
+      if (keyidSet.size !== role.keyids.length) {
+        throw new Error(`Duplicate key IDs found in role: ${roleName}`);
+      }
     }
 
     return {
