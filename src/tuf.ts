@@ -148,6 +148,33 @@ export class TUFClient {
     }
   }
 
+  private async verifyHashes(
+    data: Uint8Array | ArrayBuffer,
+    hashes: Record<string, string> | undefined,
+    context: string,
+  ): Promise<void> {
+    if (!hashes) return;
+
+    const hashAlgoMap: Record<string, string> = {
+      sha256: HashAlgorithms.SHA256,
+      sha384: HashAlgorithms.SHA384,
+      sha512: HashAlgorithms.SHA512,
+    };
+
+    for (const [algo, expectedHash] of Object.entries(hashes)) {
+      const cryptoAlgo = hashAlgoMap[algo];
+      if (!cryptoAlgo) {
+        throw new Error(`${context}: unsupported hash algorithm '${algo}'`);
+      }
+      const computedHash = Uint8ArrayToHex(
+        new Uint8Array(await crypto.subtle.digest(cryptoAlgo, data)),
+      );
+      if (!bufferEqual(expectedHash, computedHash)) {
+        throw new Error(`${context}: ${algo} hash mismatch`);
+      }
+    }
+  }
+
   // This function supports ECDSA (256, 385, 521), Ed25519 in Hex or PEM format
   // it is possible to support certain cases of RSA, but it is not really useful for now
   // Returns a mapping keyid (hexstring) -> CryptoKey object
@@ -408,19 +435,7 @@ export class TUFClient {
         );
       }
     }
-    if (snapshotMeta.hashes?.sha256) {
-      const computedHash = Uint8ArrayToHex(
-        new Uint8Array(
-          await crypto.subtle.digest(
-            HashAlgorithms.SHA256,
-            new Uint8Array(newSnapshotRaw),
-          ),
-        ),
-      );
-      if (!bufferEqual(snapshotMeta.hashes.sha256, computedHash)) {
-        throw new Error("Snapshot hash does not match timestamp hash");
-      }
-    }
+    await this.verifyHashes(newSnapshotRaw, snapshotMeta.hashes, "Snapshot");
 
     const newSnapshot = JSON.parse(Uint8ArrayToString(newSnapshotRaw));
     this.validateMetadata(newSnapshot);
@@ -522,18 +537,7 @@ export class TUFClient {
         );
       }
     }
-    // TODO: ideally we should check for both sha256 and sha512, but everything is hardcoded sha256 for now
-    if (targetsMeta.hashes?.sha256) {
-      const computedHash = Uint8ArrayToHex(
-        await crypto.subtle.digest(
-          HashAlgorithms.SHA256,
-          new Uint8Array(newTargetsRaw),
-        ),
-      );
-      if (!bufferEqual(targetsMeta.hashes.sha256, computedHash)) {
-        throw new Error("Targets hash does not match snapshot hash.");
-      }
-    }
+    await this.verifyHashes(newTargetsRaw, targetsMeta.hashes, "Targets");
 
     const newTargets = JSON.parse(Uint8ArrayToString(newTargetsRaw));
     this.validateMetadata(newTargets);
@@ -610,17 +614,14 @@ export class TUFClient {
       throw new Error(`${name} not present in the targets role.`);
     }
 
-    // Get available hashes and select one we support (prefer SHA256 over SHA512)
-    const targetHashes = cachedTargets.signed.targets[name].hashes;
-    let hashValue: string;
-    let cryptoAlgo: string;
+    const targetInfo = cachedTargets.signed.targets[name];
+    const targetHashes = targetInfo.hashes;
 
+    let hashForUrl: string;
     if (targetHashes.sha256) {
-      hashValue = targetHashes.sha256;
-      cryptoAlgo = HashAlgorithms.SHA256;
+      hashForUrl = targetHashes.sha256;
     } else if (targetHashes.sha512) {
-      hashValue = targetHashes.sha512;
-      cryptoAlgo = HashAlgorithms.SHA512;
+      hashForUrl = targetHashes.sha512;
     } else {
       throw new Error(
         `No supported hash algorithm found for ${name}. Available: ${Object.keys(targetHashes).join(", ")}`,
@@ -631,10 +632,8 @@ export class TUFClient {
     const lastSlash = name.lastIndexOf("/");
     const targetUrl =
       lastSlash === -1
-        ? `${this.targetBaseUrl}${hashValue}.${name}` // No directory: HASH.filename
-        : `${this.targetBaseUrl}${name.substring(0, lastSlash + 1)}${hashValue}.${name.substring(lastSlash + 1)}`; // dir/HASH.filename
-
-    // console.log("[TUF]", "Fetching target", targetUrl);
+        ? `${this.targetBaseUrl}${hashForUrl}.${name}` // No directory: HASH.filename
+        : `${this.targetBaseUrl}${name.substring(0, lastSlash + 1)}${hashForUrl}.${name.substring(lastSlash + 1)}`; // dir/HASH.filename
 
     const response = await fetch(targetUrl);
     if (!response.ok) {
@@ -645,22 +644,14 @@ export class TUFClient {
     const raw_file = await response.arrayBuffer();
 
     // Verify target file length
-    const expectedLength = cachedTargets.signed.targets[name].length;
-    if (raw_file.byteLength !== expectedLength) {
+    if (raw_file.byteLength !== targetInfo.length) {
       throw new Error(
-        `${name} length mismatch: expected ${expectedLength}, got ${raw_file.byteLength}`,
+        `${name} length mismatch: expected ${targetInfo.length}, got ${raw_file.byteLength}`,
       );
     }
 
-    // Verify target file hash
-    const hash_calculated = Uint8ArrayToHex(
-      await crypto.subtle.digest(cryptoAlgo, raw_file),
-    );
-    if (!bufferEqual(hashValue, hash_calculated)) {
-      throw new Error(
-        `${name} ${cryptoAlgo} hash does not match the value in the targets role.`,
-      );
-    }
+    // Verify all target file hashes
+    await this.verifyHashes(raw_file, targetHashes, `Target '${name}'`);
 
     return raw_file;
   }
