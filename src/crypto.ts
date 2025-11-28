@@ -55,18 +55,17 @@ export async function loadKeys(
     if (importedKeys.has(verified_keyId)) {
       throw new Error("Duplicate keyId found!");
     }
+    // Per TUF spec, keyId should match the computed hash of the canonical key representation.
+    // However, tuf-js doesn't enforce this either, and sigstore introduced mismatched keyIds
+    // during their root v11 signing (Feb 2025) that are now permanently in their TUF chain.
+    // KeyId verification has no real security purpose (signature verification uses the actual key).
+    // See: https://github.com/sigstore/root-signing/issues/1431
+    //      https://github.com/sigstore/root-signing/issues/1387
     if (verified_keyId !== keyId) {
       console.warn(
         `KeyId ${keyId} does not match the expected ${verified_keyId}, importing anyway the provided one for proper referencing.`,
       );
-      // Either bug on calculation or foul play, this is a huge problem
-      //throw new Error("Computed keyId does not match the provided one!");
     }
-
-    // We used to import on the computed one, however see
-    // https://github.com/sigstore/root-signing/issues/1431
-    // https://github.com/sigstore/root-signing/issues/1387
-    // Spec wise the code was correct, but security wise it does not matter and reality wise it tends to break...
     importedKeys.set(
       keyId,
       await importKey(key.keytype, key.scheme, key.keyval.public),
