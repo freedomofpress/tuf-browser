@@ -228,12 +228,9 @@ export async function checkSignatures(
   signatures: Signature[],
   threshold: number,
 ): Promise<boolean> {
-  // If no threshold is provided this is probably a root file, but in any case
-  // let's fail safe and expect everybody to sign if the threshold doesnt make sense
-  //if (threshold < 1) {
-  //    threshold = keys.size;
-  //}
-  // This does not work, because it is not granted that all the keys in a root will sign that root
+  if (threshold < 1) {
+    throw new Error("Threshold must be at least 1");
+  }
 
   if (threshold > keys.size) {
     throw new Error(
