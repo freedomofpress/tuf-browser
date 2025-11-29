@@ -23,6 +23,13 @@ export enum Roles {
   Targets = "targets",
 }
 
+export const TOP_LEVEL_ROLE_NAMES = [
+  Roles.Root,
+  Roles.Targets,
+  Roles.Snapshot,
+  Roles.Timestamp,
+] as const;
+
 export interface Key {
   keyid: string;
   keytype: string;
