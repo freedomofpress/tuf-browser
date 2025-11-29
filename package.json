@@ -31,5 +31,8 @@
     "typescript-eslint": "^8.37.0",
     "vite": "^6.0.7",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@freedomofpress/crypto-browser": "^0.1.1"
   }
 }
