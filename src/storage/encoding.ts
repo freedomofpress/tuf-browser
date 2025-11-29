@@ -1,6 +1,6 @@
 // Shared utilities for encoding/decoding raw bytes in browser storage
+import { base64ToUint8Array, Uint8ArrayToBase64 } from "@freedomofpress/crypto-browser";
 import { Metafile } from "../types.js";
-import { base64ToArrayBuffer, Uint8ArrayToBase64 } from "../utils/encoding.js";
 
 export function isRawBytesWrapper(
   value: unknown,
@@ -17,7 +17,7 @@ export function isRawBytesWrapper(
 export function decodeRawBytesWrapper(wrapper: {
   __raw_bytes__: string;
 }): Metafile {
-  const bytes = base64ToArrayBuffer(wrapper.__raw_bytes__);
+  const bytes = base64ToUint8Array(wrapper.__raw_bytes__);
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 

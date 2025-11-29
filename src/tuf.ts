@@ -1,5 +1,5 @@
+import { Uint8ArrayToHex, Uint8ArrayToString } from "@freedomofpress/crypto-browser";
 import {
-  bufferEqual,
   checkSignatures,
   getRoleKeys,
   loadKeys,
@@ -16,7 +16,6 @@ import {
   Root,
   TOP_LEVEL_ROLE_NAMES,
 } from "./types.js";
-import { Uint8ArrayToHex, Uint8ArrayToString } from "./utils/encoding.js";
 
 export class TUFClient {
   private repositoryUrl: string;
@@ -156,7 +155,7 @@ export class TUFClient {
   }
 
   private async verifyHashes(
-    data: Uint8Array | ArrayBuffer,
+    data: Uint8Array,
     hashes: Record<string, string> | undefined,
     context: string,
   ): Promise<void> {
@@ -174,9 +173,9 @@ export class TUFClient {
         throw new Error(`${context}: unsupported hash algorithm '${algo}'`);
       }
       const computedHash = Uint8ArrayToHex(
-        new Uint8Array(await crypto.subtle.digest(cryptoAlgo, data)),
+        new Uint8Array(await crypto.subtle.digest(cryptoAlgo, data as Uint8Array<ArrayBuffer>)),
       );
-      if (!bufferEqual(expectedHash, computedHash)) {
+      if (expectedHash !== computedHash) {
         throw new Error(`${context}: ${algo} hash mismatch`);
       }
     }
@@ -663,7 +662,7 @@ export class TUFClient {
         `Failed to fetch target: ${response.status} ${response.statusText}`,
       );
     }
-    const raw_file = await response.arrayBuffer();
+    const raw_file = new Uint8Array(await response.arrayBuffer());
 
     // Verify target file length
     if (raw_file.byteLength !== targetInfo.length) {
@@ -675,7 +674,7 @@ export class TUFClient {
     // Verify all target file hashes
     await this.verifyHashes(raw_file, targetHashes, `Target '${name}'`);
 
-    return raw_file;
+    return raw_file.buffer as ArrayBuffer;
   }
 
   async updateTUF() {
