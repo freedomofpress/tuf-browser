@@ -2,8 +2,15 @@
   "name": "@freedomofpress/tuf-browser",
   "version": "0.1.4",
   "description": "A minimal TUF client for both node and the browser.",
-  "main": "dist/cli.js",
+  "main": "dist/tuf.js",
+  "types": "dist/tuf.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/tuf.d.ts",
+      "default": "./dist/tuf.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
