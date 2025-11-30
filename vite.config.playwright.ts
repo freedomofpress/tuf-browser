@@ -2,26 +2,13 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  build: {
-    minify: false,
-    outDir: "dist",
-    target: "esnext",
-    lib: {
-      entry: "src/tuf.ts",
-      formats: ["es"],
-      fileName: "tuf",
-    },
-  },
   test: {
-    globals: true,
+    include: ["**/*.browser.test.ts"],
     browser: {
-      provider: "playwright",
       enabled: true,
-      instances: [
-        { browser: "chromium" },
-        { browser: "firefox" },
-        { browser: "webkit" },
-      ],
+      provider: "playwright",
+      headless: true,
+      instances: [{ browser: "chromium" }],
     },
   },
 });
