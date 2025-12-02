@@ -2,6 +2,10 @@
   "name": "@freedomofpress/tuf-browser",
   "version": "0.1.5",
   "description": "A minimal TUF client for both node and the browser.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freedomofpress/tuf-browser"
+  },
   "main": "dist/tuf.js",
   "types": "dist/tuf.d.ts",
   "type": "module",
