@@ -8,6 +8,7 @@ import { FileBackend } from "./storage.js";
 import { ExtensionStorageBackend } from "./storage/browser.js";
 import { FSBackend } from "./storage/filesystem.js";
 import { LocalStorageBackend } from "./storage/localstorage.js";
+import { MemoryBackend } from "./storage/memory.js";
 import {
   HashAlgorithms,
   Meta,
@@ -16,6 +17,10 @@ import {
   Root,
   TOP_LEVEL_ROLE_NAMES,
 } from "./types.js";
+
+export interface TUFClientOptions {
+  disableCache?: boolean;
+}
 
 export class TUFClient {
   private repositoryUrl: string;
@@ -29,20 +34,23 @@ export class TUFClient {
     startingRoot: string,
     namespace: string,
     targetBaseUrl?: string,
+    options?: TUFClientOptions,
   ) {
     this.repositoryUrl = repositoryUrl;
     this.targetBaseUrl = targetBaseUrl || repositoryUrl;
     this.startingRoot = startingRoot;
     this.namespace = namespace;
 
-    if (typeof process !== "undefined" && process.versions?.node) {
+    if (options?.disableCache) {
+      this.backend = new MemoryBackend();
+    } else if (typeof process !== "undefined" && process.versions?.node) {
       this.backend = new FSBackend();
     } else if (typeof browser !== "undefined" && browser.storage?.local) {
       this.backend = new ExtensionStorageBackend();
     } else if (typeof localStorage !== "undefined") {
       this.backend = new LocalStorageBackend();
     } else {
-      throw new Error("No cache backend available");
+      this.backend = new MemoryBackend();
     }
   }
 
