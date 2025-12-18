@@ -5,8 +5,8 @@ import {
   loadKeys,
 } from "./crypto.js";
 import { FileBackend } from "./storage.js";
+export type { FileBackend } from "./storage.js";
 import { ExtensionStorageBackend } from "./storage/browser.js";
-import { FSBackend } from "./storage/filesystem.js";
 import { LocalStorageBackend } from "./storage/localstorage.js";
 import { MemoryBackend } from "./storage/memory.js";
 import {
@@ -20,6 +20,7 @@ import {
 
 export interface TUFClientOptions {
   disableCache?: boolean;
+  backend?: FileBackend;
 }
 
 export class TUFClient {
@@ -41,10 +42,10 @@ export class TUFClient {
     this.startingRoot = startingRoot;
     this.namespace = namespace;
 
-    if (options?.disableCache) {
+    if (options?.backend) {
+      this.backend = options.backend;
+    } else if (options?.disableCache) {
       this.backend = new MemoryBackend();
-    } else if (typeof process !== "undefined" && process.versions?.node) {
-      this.backend = new FSBackend();
     } else if (typeof browser !== "undefined" && browser.storage?.local) {
       this.backend = new ExtensionStorageBackend();
     } else if (typeof localStorage !== "undefined") {

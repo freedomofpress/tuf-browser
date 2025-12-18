@@ -61,6 +61,8 @@ async function main() {
         metadataUrl,
         JSON.stringify(await backend.read(`${metadataDir}/root.json`)),
         metadataDir,
+        undefined,
+        { backend },
       );
       await client.updateTUF();
       process.exit(0);
@@ -77,6 +79,7 @@ async function main() {
         JSON.stringify(await backend.read(`${metadataDir}/root.json`)),
         metadataDir,
         targetBaseUrl,
+        { backend },
       );
       await client.updateTUF();
       const target = await client.getTarget(targetName);
