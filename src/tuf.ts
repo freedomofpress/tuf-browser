@@ -182,7 +182,7 @@ export class TUFClient {
         throw new Error(`${context}: unsupported hash algorithm '${algo}'`);
       }
       const computedHash = Uint8ArrayToHex(
-        new Uint8Array(await crypto.subtle.digest(cryptoAlgo, data as Uint8Array<ArrayBuffer>)),
+        new Uint8Array(await crypto.subtle.digest(cryptoAlgo, data as BufferSource)),
       );
       if (expectedHash !== computedHash) {
         throw new Error(`${context}: ${algo} hash mismatch`);
