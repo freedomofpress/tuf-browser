@@ -39,7 +39,7 @@ export async function loadKeys(
     const canonicalBytes = stringToUint8Array(canonicalize(key));
     const verified_keyId = Uint8ArrayToHex(
       new Uint8Array(
-        await crypto.subtle.digest(HashAlgorithms.SHA256, canonicalBytes as Uint8Array<ArrayBuffer>),
+        await crypto.subtle.digest(HashAlgorithms.SHA256, canonicalBytes as BufferSource),
       ),
     );
 
