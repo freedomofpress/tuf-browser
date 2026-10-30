@@ -1,6 +1,7 @@
+import { canonicalizeOLPC, stringToUint8Array, Uint8ArrayToHex } from "@freedomofpress/crypto-browser";
 import { describe, expect, it, vi } from "vitest";
 
-import { loadKeys } from "./crypto.js";
+import { checkSignatures, loadKeys } from "./crypto.js";
 import { TUFClient } from "./tuf.js";
 
 describe("TUF Browser Integration Tests", () => {
@@ -91,5 +92,26 @@ describe("loadKeys", () => {
     expect(imported.has(keyid)).toBe(true);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+});
+
+describe("checkSignatures", () => {
+  it("counts a signature that is not hex as invalid and lets the others reach the threshold", async () => {
+    const signed = { _type: "root", version: 1 };
+    const canonical = stringToUint8Array(canonicalizeOLPC(signed));
+    const keys = new Map<string, CryptoKey>();
+    const signatures = [];
+    for (const sig of ["zz", null]) {
+      const pair = (await crypto.subtle.generateKey("Ed25519", true, ["sign", "verify"])) as CryptoKeyPair;
+      const keyid = Uint8ArrayToHex(new Uint8Array(await crypto.subtle.exportKey("raw", pair.publicKey)));
+      keys.set(keyid, pair.publicKey);
+      signatures.push({
+        keyid,
+        sig: sig ?? Uint8ArrayToHex(new Uint8Array(await crypto.subtle.sign("Ed25519", pair.privateKey, canonical as BufferSource))),
+      });
+    }
+    const keyids = [...keys.keys()];
+    expect(await checkSignatures(keys, keyids, signed, signatures, 1)).toBe(true);
+    expect(await checkSignatures(keys, keyids, signed, signatures.slice(0, 1), 1)).toBe(false);
   });
 });

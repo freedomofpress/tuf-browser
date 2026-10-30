@@ -1,8 +1,8 @@
 import {
   canonicalizeOLPC,
-  HashAlgorithms,
   hexToUint8Array,
   importKey,
+  sha256,
   stringToUint8Array,
   Uint8ArrayToHex,
   verifySignature,
@@ -38,11 +38,7 @@ export async function loadKeys(
     /* https://github.com/sigstore/root-signing/issues/1387 */
     const key = keys[keyId];
     const canonicalBytes = stringToUint8Array(canonicalizeOLPC(key));
-    const verified_keyId = Uint8ArrayToHex(
-      new Uint8Array(
-        await crypto.subtle.digest(HashAlgorithms.SHA256, canonicalBytes as BufferSource),
-      ),
-    );
+    const verified_keyId = Uint8ArrayToHex(await sha256(canonicalBytes));
 
     // Check for key duplicates
     if (importedKeys.has(verified_keyId)) {
@@ -108,10 +104,16 @@ export async function checkSignatures(
 
     // Step 3, grab the correct CryptoKey
     const key = keys.get(signature.keyid);
-    const sig = hexToUint8Array(signature.sig);
-
     if (!key) {
       throw new Error("Keyid was empty.");
+    }
+
+    // A signature that is not hex is just an invalid signature; the threshold decides.
+    let sig: Uint8Array;
+    try {
+      sig = hexToUint8Array(signature.sig);
+    } catch {
+      continue;
     }
 
     // ECDSA hashes with the curve-sized digest (ecdsa-sha2-nistp384 uses SHA-384).

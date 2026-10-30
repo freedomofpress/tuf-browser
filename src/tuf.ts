@@ -1,4 +1,4 @@
-import { Uint8ArrayToHex, Uint8ArrayToString } from "@freedomofpress/crypto-browser";
+import { digest, Uint8ArrayToHex, Uint8ArrayToString } from "@freedomofpress/crypto-browser";
 
 import {
   checkSignatures,
@@ -180,9 +180,7 @@ export class TUFClient {
       if (!cryptoAlgo) {
         throw new Error(`${context}: unsupported hash algorithm '${algo}'`);
       }
-      const computedHash = Uint8ArrayToHex(
-        new Uint8Array(await crypto.subtle.digest(cryptoAlgo, data as BufferSource)),
-      );
+      const computedHash = Uint8ArrayToHex(await digest(cryptoAlgo, data));
       if (expectedHash !== computedHash) {
         throw new Error(`${context}: ${algo} hash mismatch`);
       }
