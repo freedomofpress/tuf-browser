@@ -1,4 +1,5 @@
 import { Uint8ArrayToHex, Uint8ArrayToString } from "@freedomofpress/crypto-browser";
+
 import {
   checkSignatures,
   getRoleKeys,
@@ -93,8 +94,6 @@ export class TUFClient {
     } else {
       url = `${this.repositoryUrl}${version}.${role}`;
     }
-
-    // console.log("[TUF]", "Fetching", url);
 
     const response = await fetch(url);
 
@@ -264,7 +263,6 @@ export class TUFClient {
     // Is this the first time we are running the update meaning we have no cached file?
     if (!rootJson) {
       // Then load the hardcoded startup root
-      // console.log("[TUF]", "Starting from hardcoded root");
       // Spec 5.2
       rootJson = await this.bootstrapRoot(this.startingRoot);
     }

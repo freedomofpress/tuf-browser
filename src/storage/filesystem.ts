@@ -32,9 +32,8 @@ export class FSBackend implements FileBackend {
   async delete(key: string): Promise<void> {
     try {
       await fs.unlink(key);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (error.code !== "ENOENT") {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         throw error;
       }
     }
