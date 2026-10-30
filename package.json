@@ -51,6 +51,6 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@freedomofpress/crypto-browser": "^0.2.0"
+    "@freedomofpress/crypto-browser": "^0.2.2"
   }
 }
