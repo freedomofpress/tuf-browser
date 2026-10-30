@@ -1,5 +1,6 @@
 // Shared utilities for encoding/decoding raw bytes in browser storage
 import { base64ToUint8Array, Uint8ArrayToBase64 } from "@freedomofpress/crypto-browser";
+
 import { Metafile } from "../types.js";
 
 export function isRawBytesWrapper(
@@ -9,8 +10,7 @@ export function isRawBytesWrapper(
     value != null &&
     typeof value === "object" &&
     "__raw_bytes__" in value &&
-    // eslint-disable-next-line
-    typeof (value as any).__raw_bytes__ === "string"
+    typeof (value as { __raw_bytes__: unknown }).__raw_bytes__ === "string"
   );
 }
 

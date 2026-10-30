@@ -7,6 +7,7 @@ import {
   Uint8ArrayToHex,
   verifySignature,
 } from "@freedomofpress/crypto-browser";
+
 import { Signature, Signed } from "./types.js";
 
 // We use this to remove to select from the root keys only the ones allowed for a specific role
