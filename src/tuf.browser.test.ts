@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { loadKeys } from "./crypto.js";
 import { TUFClient } from "./tuf.js";
 
 describe("TUF Browser Integration Tests", () => {
@@ -65,5 +67,29 @@ describe("TUF Browser Integration Tests", () => {
 
     expect(hash).toBeInstanceOf(ArrayBuffer);
     expect(hash.byteLength).toBe(32);
+  });
+});
+
+// Key 2f64fb5e from sigstore's 1.root.json, whose keyids were generated as the
+// SHA-256 of the OLPC canonical key. Fails if the encoder dialect changes.
+describe("loadKeys", () => {
+  it("computes sigstore root v1 keyids with OLPC canonical JSON", async () => {
+    const keyid = "2f64fb5eac0cf94dd39bb45308b98920055e9a0d8e012a7220787834c60aef97";
+    const keys = {
+      [keyid]: {
+        keyid_hash_algorithms: ["sha256", "sha512"],
+        keytype: "ecdsa-sha2-nistp256",
+        keyval: {
+          public:
+            "04cbc5cab2684160323c25cd06c3307178a6b1d1c9b949328453ae473c5ba7527e35b13f298b41633382241f3fd8526c262d43b45adee5c618fa0642c82b8a9803",
+        },
+        scheme: "ecdsa-sha2-nistp256",
+      },
+    };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const imported = await loadKeys(keys);
+    expect(imported.has(keyid)).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
