@@ -1,6 +1,6 @@
 {
   "name": "@freedomofpress/tuf-browser",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "A minimal TUF client for both node and the browser.",
   "repository": {
     "type": "git",
@@ -48,6 +48,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@freedomofpress/crypto-browser": "^0.1.7"
+    "@freedomofpress/crypto-browser": "^0.2.0"
   }
 }
