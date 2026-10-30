@@ -9,6 +9,13 @@
   "main": "dist/tuf.js",
   "types": "dist/tuf.d.ts",
   "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.19"
+  },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/tuf.d.ts",
@@ -23,9 +30,7 @@
     "build": "tsc",
     "test": "vitest run --config vite.config.playwright.ts",
     "test:playwright": "vitest --config vite.config.playwright.ts",
-    "test:default": "vitest --config vite.config.ts",
-    "coverage": "vitest run --coverage",
-    "lint": "npx eslint . --fix && npx prettier --write ."
+    "lint": "eslint . --fix"
   },
   "keywords": [
     "theupdateframework",
@@ -36,7 +41,6 @@
   "author": "Giulio B",
   "license": "MIT",
   "devDependencies": {
-    "@types/firefox": "^0.0.34",
     "@types/firefox-webext-browser": "^120.0.4",
     "@types/node": "^24.0.14",
     "@vitest/browser": "^3.2.4",
@@ -44,7 +48,6 @@
     "playwright": "^1.49.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.37.0",
-    "vite": "^6.0.7",
     "vitest": "^3.2.4"
   },
   "dependencies": {
