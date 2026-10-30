@@ -114,12 +114,18 @@ export async function checkSignatures(
       throw new Error("Keyid was empty.");
     }
 
+    // ECDSA hashes with the curve-sized digest (ecdsa-sha2-nistp384 uses SHA-384).
+    // verifySignature ignores the hint for RSA and Ed25519.
+    const curve = (key.algorithm as EcKeyAlgorithm).namedCurve;
+    const hash = curve === "P-384" ? "sha384" : curve === "P-521" ? "sha512" : "sha256";
+
     // We checked before that the key exists
     if (
       (await verifySignature(
         key,
         stringToUint8Array(signed_canon),
         sig,
+        hash,
       )) === true
     ) {
       // We used to halt on error, but... https://github.com/sigstore/root-signing/issues/1448
