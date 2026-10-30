@@ -1,5 +1,5 @@
 import {
-  canonicalize,
+  canonicalizeOLPC,
   HashAlgorithms,
   hexToUint8Array,
   importKey,
@@ -36,7 +36,7 @@ export async function loadKeys(
     /* A KEYID, which MUST be correct for the specified KEY. Clients MUST calculate each KEYID to verify this is correct for the associated key. Clients MUST ensure that for any KEYID represented in this key list and in other files, only one unique key has that KEYID. */
     /* https://github.com/sigstore/root-signing/issues/1387 */
     const key = keys[keyId];
-    const canonicalBytes = stringToUint8Array(canonicalize(key));
+    const canonicalBytes = stringToUint8Array(canonicalizeOLPC(key));
     const verified_keyId = Uint8ArrayToHex(
       new Uint8Array(
         await crypto.subtle.digest(HashAlgorithms.SHA256, canonicalBytes as BufferSource),
@@ -88,7 +88,7 @@ export async function checkSignatures(
   const keyIds = new Set(roleKeys);
 
   // Let's canonicalize first the body
-  const signed_canon = canonicalize(signed);
+  const signed_canon = canonicalizeOLPC(signed);
 
   let valid_signatures = 0;
   for (const signature of signatures) {
