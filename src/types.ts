@@ -16,7 +16,7 @@ export const TOP_LEVEL_ROLE_NAMES = [
 ] as const;
 
 export interface Key {
-  keyid: string;
+  keyid?: string; // not part of TUF key metadata, only present on signatures
   keytype: string;
   scheme: string;
   keyval: {
