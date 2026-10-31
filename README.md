@@ -16,6 +16,7 @@ This is a lightweight alternative to [tuf-js](https://github.com/theupdateframew
 - **Minimal Dependencies**: Zero external dependencies for maximum compatibility
 - **Spec Compliant**: Passes TUF conformance tests for supported features
 - **ECDSA & Ed25519 Support**: Uses Web Crypto API for ECDSA-P256 and Ed25519 signatures
+  Browsers without native Ed25519 need the application to call `installEd25519Fallback()` from `@freedomofpress/crypto-browser/noble` once at startup.
 
 ## Limitations
 
