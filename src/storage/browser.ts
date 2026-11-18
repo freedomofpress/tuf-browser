@@ -4,6 +4,7 @@ import {
   createRawBytesWrapper,
   decodeRawBytesWrapper,
   isRawBytesWrapper,
+  storedBytes,
 } from "./encoding.js";
 
 export class ExtensionStorageBackend implements FileBackend {
@@ -16,6 +17,11 @@ export class ExtensionStorageBackend implements FileBackend {
     }
 
     return value;
+  }
+
+  async readRaw(key: string): Promise<Uint8Array | undefined> {
+    const result = await browser.storage.local.get(key);
+    return storedBytes(result[key]);
   }
 
   async write(key: string, value: Metafile): Promise<void> {

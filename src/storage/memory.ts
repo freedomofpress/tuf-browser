@@ -1,6 +1,11 @@
 import type { FileBackend } from "../storage.js";
 import type { Metafile } from "../types.js";
-import { createRawBytesWrapper, decodeRawBytesWrapper, isRawBytesWrapper } from "./encoding.js";
+import {
+  createRawBytesWrapper,
+  decodeRawBytesWrapper,
+  isRawBytesWrapper,
+  storedBytes,
+} from "./encoding.js";
 
 export class MemoryBackend implements FileBackend {
   private cache = new Map<string, Metafile | { __raw_bytes__: string }>();
@@ -12,6 +17,10 @@ export class MemoryBackend implements FileBackend {
       return decodeRawBytesWrapper(value);
     }
     return value as Metafile;
+  }
+
+  async readRaw(key: string): Promise<Uint8Array | undefined> {
+    return storedBytes(this.cache.get(key));
   }
 
   async write(key: string, value: Metafile): Promise<void> {

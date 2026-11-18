@@ -14,6 +14,14 @@ export class FSBackend implements FileBackend {
     }
   }
 
+  async readRaw(key: string): Promise<Uint8Array | undefined> {
+    try {
+      return new Uint8Array(await fs.readFile(key));
+    } catch {
+      return undefined;
+    }
+  }
+
   async write(key: string, value: Metafile): Promise<void> {
     await this.ensureParentDir(key);
     await fs.writeFile(key, JSON.stringify(value), "utf8");
